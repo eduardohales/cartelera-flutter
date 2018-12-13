@@ -1,16 +1,24 @@
-# cartelera
+# Cartelera
 
-A new Flutter project.
+El objetivo es crear una aplicación que permita a un usuario ver las peliculas que están actualmente en cartelera y guardar aquellas que desea ver.
 
-## Getting Started
+Para ello, primeramente se debe crear un backend que permita registrar y loguear al usuario. Posterior a esto, ingresará a la pantalla principal, para la cual deberá consumir el siguiente servicio:
 
-This project is a starting point for a Flutter application.
+https://api.themoviedb.org/3/discover/movie?api_key=bf8fd38dca5a76f8943629f454221dac
 
-A few resources to get you started if this is your first Flutter project:
+Las imágenes se cargan de la siguiente forma: En el json viene el atributo
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+"poster_path": "/2uNW4WbgBXL25BAbXGLnLqX71Sw.jpg"
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+A este path se le concatena la url https://image.tmdb.org/t/p/w500, quedando:
+
+https://image.tmdb.org/t/p/w500/2uNW4WbgBXL25BAbXGLnLqX71Sw.jpg
+
+La que pueden cargar en la vista.
+
+## Requisitos:
+
+- Backend en NodeJS
+- Base de datos MongoDB
+- App móvil Android
+- MVP como patrón de arquitectura de la aplicación
