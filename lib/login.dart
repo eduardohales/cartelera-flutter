@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cartelera/sliderBubble.dart';
+import 'package:cartelera/home_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+//import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   static String tag = 'login-page';
@@ -13,9 +18,21 @@ class _LoginPageState extends State<LoginPage> {
   bool obscureLoginFlag = true;
   bool obscurePasswordFlag = true;
   bool obscureConfirmFlag = true;
+  
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
+  final usernameTextController = TextEditingController(); 
+  final emailTextController = TextEditingController();
+  final passwordTextController = TextEditingController();
+  final confirmTextController = TextEditingController();
+
+  final loginemailTextController = TextEditingController();
+  final loginpasswordTextController = TextEditingController();
+
 
   Color loginColor = Colors.black;
   Color registerColor = Colors.white;
+  
 
   @override
   void initState() {
@@ -24,8 +41,87 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
+  void dispose() {
+    // Clean up the controller when the Widget is disposed
+    usernameTextController.dispose();
+    emailTextController.dispose();
+    passwordTextController.dispose();
+    super.dispose();
+  }
+
+  void showSnackBar(String value, num statusCode) {
+    FocusScope.of(context).requestFocus(new FocusNode());
+    _scaffoldKey.currentState?.removeCurrentSnackBar();
+    _scaffoldKey.currentState.showSnackBar(new SnackBar(
+      content: new Text(
+        value,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+            color: Colors.white,
+            fontSize: 16.0,
+        ),
+      ),
+      backgroundColor: Colors.red[700].withOpacity(0.7),
+      duration: Duration(seconds: 1),
+    )).closed.then((SnackBarClosedReason reason) {
+      if(statusCode == 200)
+        Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+    });
+  }
+
+  void registerUser(String username, String email, String password) async {
+    var url = "http://localhost:8080/user";
+     final body = <String, String>{
+      'username': username,
+      'email': email,
+      'password': password,
+    };
+    http.post(url, body: body).then((response) {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+      //print(response);
+      bool ok = json.decode(response.body)['ok'];
+      if (ok)
+        showSnackBar(json.decode(response.body)['msg'].toString(), response.statusCode);
+      else
+        showSnackBar(json.decode(response.body)['err'].toString(), response.statusCode);
+    });
+  }
+
+  void loginUser(String email, String password) async {
+    var url = "http://localhost:8080/login";
+     final body = <String, String>{
+      'email': email,
+      'password': password,
+    };
+    http.post(url, body: body).then((response) {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+      //print(response);
+      bool ok = json.decode(response.body)['ok'];
+      if (ok) {
+        showSnackBar(json.decode(response.body)['msg'].toString(), response.statusCode);
+        //getUser(json.decode(response.body)['user']['_id']);
+      }
+      else
+        showSnackBar(json.decode(response.body)['err'].toString(), response.statusCode);
+    });
+  }
+/*
+  void storeUser(String value) async {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      await pref.setString('id', value);
+  }
+
+  void getUser(String value) async {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      pref.getString('id');
+  }
+*/
+  @override
   Widget build(BuildContext context) {
     return new Scaffold(
+      key: _scaffoldKey,
       body: NotificationListener<OverscrollIndicatorNotification>(
         onNotification: (overscroll) {
           overscroll.disallowGlow();
@@ -53,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: EdgeInsets.only(top: 100.0, right: 50),
                   child: Text(
-                    'NegritoFlix',
+                    'NegroFlix',
                     style: TextStyle(
                         color: Colors.red[700],
                         fontSize: 50,
@@ -184,6 +280,7 @@ class _LoginPageState extends State<LoginPage> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 25, vertical: 20),
                         child: TextField(
+                          controller: loginemailTextController,
                           keyboardType: TextInputType.emailAddress,
                           style: TextStyle(fontSize: 16.0, color: Colors.black),
                           decoration: InputDecoration(
@@ -205,6 +302,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: TextField(
                           obscureText: obscureLoginFlag,
                           style: TextStyle(fontSize: 16.0, color: Colors.black),
+                          controller: loginpasswordTextController,
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: "Password",
@@ -251,7 +349,13 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      onPressed: () {}),
+                      onPressed: () {
+                        loginUser(
+                          loginemailTextController.text, 
+                          loginpasswordTextController.text
+                          ); 
+                        //Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+                      }),
                 ),
               )
             ],
@@ -260,7 +364,9 @@ class _LoginPageState extends State<LoginPage> {
           Padding(
             padding: EdgeInsets.only(top: 10.0),
             child: FlatButton(
-                onPressed: () {},
+                onPressed: () {
+                  showSnackBar('Not implemented', 0);
+                },
                 child: Text(
                   "Forgot Password?",
                   style: TextStyle(
@@ -328,7 +434,9 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: EdgeInsets.only(top: 10.0, right: 40.0),
                 child: GestureDetector(
-                  onTap: () => {},
+                  onTap: () {
+                    showSnackBar('Not implemented', 0);
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(15.0),
                     decoration: new BoxDecoration(
@@ -345,7 +453,9 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: EdgeInsets.only(top: 10.0),
                 child: GestureDetector(
-                  onTap: () => {},
+                  onTap: ()  {
+                    showSnackBar('Not implemented', 0);
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(15.0),
                     decoration: new BoxDecoration(
@@ -393,8 +503,8 @@ class _LoginPageState extends State<LoginPage> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 25, vertical: 15),
                         child: TextField(
+                          controller: usernameTextController,
                           keyboardType: TextInputType.text,
-                          textCapitalization: TextCapitalization.words,
                           style: TextStyle(fontSize: 16.0, color: Colors.black),
                           decoration: InputDecoration(
                             border: InputBorder.none,
@@ -415,6 +525,7 @@ class _LoginPageState extends State<LoginPage> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 25, vertical: 15),
                         child: TextField(
+                          controller: emailTextController,
                           keyboardType: TextInputType.emailAddress,
                           style: TextStyle(fontSize: 16.0, color: Colors.black),
                           decoration: InputDecoration(
@@ -439,7 +550,8 @@ class _LoginPageState extends State<LoginPage> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 25, vertical: 15),
                         child: TextField(
-													obscureText: obscurePasswordFlag,
+                          controller: passwordTextController,
+                          obscureText: obscurePasswordFlag,
                           style: TextStyle(fontSize: 16.0, color: Colors.black),
                           decoration: InputDecoration(
                             border: InputBorder.none,
@@ -475,8 +587,9 @@ class _LoginPageState extends State<LoginPage> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 25, vertical: 15),
                         child: TextField(
+                          controller: confirmTextController,
                           style: TextStyle(fontSize: 16.0, color: Colors.black),
-													obscureText: obscureConfirmFlag,
+                          obscureText: obscureConfirmFlag,
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             icon: Icon(FontAwesomeIcons.lock,
@@ -524,7 +637,14 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      onPressed: () {}),
+                      onPressed: () {
+                        print(emailTextController?.text);
+                        registerUser(
+                          usernameTextController.text,
+                          emailTextController.text,
+                          passwordTextController.text
+                        ); 
+                      }),
                 ),
               )
             ],
@@ -534,3 +654,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+
+
+  
